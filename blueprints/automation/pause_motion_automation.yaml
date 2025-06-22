@@ -1,0 +1,57 @@
+blueprint:
+  name: Pause motion automation
+  description: >
+    Activate / deactivate automation(s) which is triggered by a motion sensor to toggle lights. 
+    The automation will be deactivated if the light is turned on manually and activated by turning the light off.
+  domain: automation
+  author: Christian Herkenhoff
+  input:
+    light_entity:
+      name: Light
+      description: Light that is turned on / off manually which is normally toggled by motion automation(s).
+      selector:
+        entity:
+          filter:
+            - domain: light
+          multiple: false
+    automation_entity:
+      name: Motion Automations
+      description: Automations which are triggered by a motion sensor to turn on / off the light
+      selector:
+        entity:
+          filter:
+            - domain: automation
+          multiple: true
+
+triggers:
+  - trigger: state
+    entity_id:
+      - !input light_entity
+    from: null
+conditions:
+  - condition: template
+    value_template: "{{ trigger.to_state.context.user_id != none }}"
+actions:
+  - action: automation.toggle
+    metadata: {}
+    data: {}
+    target:
+      entity_id: !input automation_entity
+  - if:
+      - condition: state
+        entity_id: !input light_entity
+        state: "on"
+    then:
+      - action: automation.turn_off
+        metadata: {}
+        data:
+          stop_actions: true
+        target:
+          entity_id: !input automation_entity
+    else:
+      - action: automation.turn_on
+        metadata: {}
+        data: {}
+        target:
+          entity_id: !input automation_entity
+mode: single
