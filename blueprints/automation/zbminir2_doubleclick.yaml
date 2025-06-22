@@ -1,5 +1,5 @@
 blueprint:
-  name: ZBMINIR2 Double-Click
+  name: ZBMINIR2 detached mode - double click
   description: Toggles light on double click without turn off the switch of ZBMINIR2. Detached Relay has to be enabled
   domain: automation
   author: Christian Herkenhoff

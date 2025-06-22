@@ -1,0 +1,41 @@
+blueprint:
+  name: ZBMINIR2 detached mode - click
+  description: Toggles light on click without turn off the switch of ZBMINIR2. Detached Relay has to be enabled
+  domain: automation
+  author: Christian Herkenhoff
+  input:
+    zbminir2_device:
+      name: ZBMINIR2 device
+      description: ZBMINIR2 device, ensure to activate "Detach relay mode"
+      selector:
+        device:
+          filter:
+            - manufacturer: SONOFF
+              model: Zigbee smart switch
+          multiple: false
+    target:
+      name: Toggle target lights or switches
+      description: Click will toggle the lights or switches
+      selector:
+        entity:
+          filter:
+          - domain:
+            - light
+            - switch
+          multiple: true
+
+triggers:
+  - domain: mqtt
+    device_id: !input zbminir2_device
+    type: action
+    subtype: toggle
+    trigger: device
+
+condition: []
+
+actions:
+  - action: homeassistant.toggle
+    target:
+      entity_id: !input target
+
+mode: single
