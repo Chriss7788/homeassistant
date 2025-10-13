@@ -28,9 +28,6 @@ triggers:
     entity_id:
       - !input light_entity
     from: null
-conditions:
-  - condition: template
-    value_template: "{{ trigger.to_state.context.user_id != none }}"
 actions:
   - action: automation.toggle
     metadata: {}
@@ -41,6 +38,8 @@ actions:
       - condition: state
         entity_id: !input light_entity
         state: "on"
+      - condition: template
+        value_template: "{{ trigger.to_state.context.user_id is not none }}"
     then:
       - action: automation.turn_off
         metadata: {}
