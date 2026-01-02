@@ -1,0 +1,128 @@
+blueprint:
+  name: Time based Jalousie position
+  description: >
+    Sets the jalousie position (0-100%) based on up and down runtime
+  domain: automation
+  input:
+    switch_up:
+      name: Switch Cover Up
+      selector:
+        entity:
+          domain: switch
+
+    switch_down:
+      name: Switch Cover Down
+      selector:
+        entity:
+          domain: switch
+
+    position_entity:
+      name: Positions-Input (0–100)
+      selector:
+        entity:
+          domain: input_number
+
+    step_ms_up:
+      name: Runtime up (in ms)
+      default: 160
+      selector:
+        number:
+          min: 50
+          max: 500
+          unit_of_measurement: ms
+          mode: slider
+
+    step_ms_down:
+      name: Runtime down (in ms)
+      default: 140
+      selector:
+        number:
+          min: 50
+          max: 500
+          unit_of_measurement: ms
+          mode: slider
+
+mode: restart
+
+trigger:
+  - platform: state
+    entity_id: !input switch_up
+    to: "on"
+    id: up
+
+  - platform: state
+    entity_id: !input switch_down
+    to: "on"
+    id: down
+
+action:
+  - choose:
+      # =====================
+      # Up
+      # =====================
+      - conditions:
+          - condition: trigger
+            id: up
+        sequence:
+          - variables:
+              step_ms: !input step_ms_up
+
+          - service: switch.turn_off
+            target:
+              entity_id: !input switch_down
+
+          - repeat:
+              until:
+                - condition: or
+                  conditions:
+                    - condition: numeric_state
+                      entity_id: !input position_entity
+                      above: 99
+                    - condition: state
+                      entity_id: !input switch_up
+                      state: "off"
+              sequence:
+                - service: input_number.increment
+                  target:
+                    entity_id: !input position_entity
+                - delay:
+                    milliseconds: "{{ step_ms }}"
+
+          - service: switch.turn_off
+            target:
+              entity_id: !input switch_up
+
+      # =====================
+      # Down
+      # =====================
+      - conditions:
+          - condition: trigger
+            id: down
+        sequence:
+          - variables:
+              step_ms: !input step_ms_down
+
+          - service: switch.turn_off
+            target:
+              entity_id: !input switch_up
+
+          - repeat:
+              until:
+                - condition: or
+                  conditions:
+                    - condition: numeric_state
+                      entity_id: !input position_entity
+                      below: 1
+                    - condition: state
+                      entity_id: !input switch_down
+                      state: "off"
+              sequence:
+                - service: input_number.decrement
+                  target:
+                    entity_id: !input position_entity
+                - delay:
+                    milliseconds: "{{ step_ms }}"
+
+          - service: switch.turn_off
+            target:
+              entity_id: !input switch_down
